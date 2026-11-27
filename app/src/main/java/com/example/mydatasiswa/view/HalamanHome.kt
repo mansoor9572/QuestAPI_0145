@@ -1,6 +1,7 @@
 package com.example.mydatasiswa.view
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,6 +26,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -45,11 +47,16 @@ import com.example.mydatasiswa.viewmodel.StatusUiSiswa
 fun HomeScreen(
     //edit 1.1 : tambahkan parameter navigateToItemEntry
     navigateToItemEntry: () -> Unit,
-
+    //edit 2.4 : tambahkan parameter navigateToItemUpdate
+    navigateToItemUpdate: (Int) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = viewModel(factory =
         PenyediaViewModel.Factory)
 ) {
+    // Muat ulang daftar setiap kali kembali ke Home (setelah tambah/edit/hapus)
+    LaunchedEffect(Unit) {
+        viewModel.loadSiswa()
+    }
     val scrollBehavior = TopAppBarDefaults
         .exitUntilCollapsedScrollBehavior()
     Scaffold(
@@ -80,6 +87,7 @@ fun HomeScreen(
     ) { innerPadding ->
         HomeBody(
             statusUiSiswa = viewModel.listSiswa,
+            onSiswaClick = navigateToItemUpdate,
             retryAction = viewModel::loadSiswa,
             modifier = modifier
                 .padding(innerPadding)
@@ -91,7 +99,7 @@ fun HomeScreen(
 fun HomeBody(
     statusUiSiswa: StatusUiSiswa,
     //edit 2.3 tambahkan parameter onSiswaClick
-
+    onSiswaClick: (Int) -> Unit,
     retryAction: () -> Unit,
     modifier: Modifier = Modifier
 ){
@@ -104,7 +112,7 @@ fun HomeBody(
             //edit 2.5 : tambahkan event onSiswaClick
             is StatusUiSiswa.Success -> DaftarSiswa(itemSiswa =
                 statusUiSiswa.siswa,
-
+                onSiswaClick = { onSiswaClick(it.id) }
             )
             is StatusUiSiswa.Error -> ErrorScreen(
                 retryAction,
@@ -141,7 +149,7 @@ fun ErrorScreen(retryAction: () -> Unit, modifier: Modifier =
 fun DaftarSiswa(
     itemSiswa : List<DataSiswa>,
     //edit 2.1 : tambahkan parameter onSiswaClick
-
+    onSiswaClick: (DataSiswa) -> Unit,
     modifier: Modifier=Modifier
 ){
     LazyColumn(modifier = Modifier){
@@ -152,9 +160,8 @@ fun DaftarSiswa(
                 modifier = Modifier
                     .padding(dimensionResource(id = R.dimen
                         .padding_small))
-                //edit 2.2 jadikan itemsiswa menjadi clickable
-                // ()
-
+                    //edit 2.2 jadikan itemsiswa menjadi clickable
+                    .clickable { onSiswaClick(person) }
             )
         }
     }
